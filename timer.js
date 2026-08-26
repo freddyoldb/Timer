@@ -1,6 +1,8 @@
 /**
- * Timer-Anwendung
- * Läuft nur nach erfolgreicher Authentifizierung hinter der Firewall
+ * Timer Application - Standalone Client-Side Implementation
+ * 
+ * Dies ist eine vollständig Client-seitige Timer-Anwendung.
+ * Alle Funktionalität läuft im Browser, NICHT auf einem Server.
  */
 
 class TimerApplication {
@@ -8,78 +10,37 @@ class TimerApplication {
         this.isRunning = false;
         this.elapsedSeconds = 0;
         this.intervalId = null;
-        this.authForm = document.getElementById('authForm');
-        this.statusMessage = document.getElementById('statusMessage');
-        this.timerApp = document.getElementById('timerApp');
         this.timeDisplay = document.getElementById('timeDisplay');
         this.startBtn = document.getElementById('startBtn');
         this.pauseBtn = document.getElementById('pauseBtn');
         this.resetBtn = document.getElementById('resetBtn');
         this.logoutBtn = document.getElementById('logoutBtn');
-        this.userIdentity = document.getElementById('userIdentity');
+        this.sessionTime = document.getElementById('sessionTime');
+        this.copyTelegramBtn = document.getElementById('copyTelegramBtn');
+        this.requestStatus = document.getElementById('requestStatus');
+        this.notificationArea = document.getElementById('notificationArea');
+        
+        this.sessionStartTime = Date.now();
+        this.timerExtensions = 0;
         
         this.initializeEventListeners();
+        this.updateSessionTime();
+        
+        console.log('✓ Timer Application initialized');
     }
 
     initializeEventListeners() {
-        // Authentifizierung
-        this.authForm.addEventListener('submit', (e) => this.handleAuthentication(e));
-
         // Timer-Steuerung
         this.startBtn.addEventListener('click', () => this.start());
         this.pauseBtn.addEventListener('click', () => this.pause());
         this.resetBtn.addEventListener('click', () => this.reset());
         this.logoutBtn.addEventListener('click', () => this.logout());
-    }
-
-    /**
-     * Verarbeitet die Authentifizierung
-     */
-    async handleAuthentication(event) {
-        event.preventDefault();
         
-        const authCodeInput = document.getElementById('authCode');
-        const code = authCodeInput.value.trim();
-
-        if (!code) {
-            this.showStatus('Bitte geben Sie einen Code ein', 'error');
-            return;
-        }
-
-        // Deaktiviere den Button während der Authentifizierung
-        this.authForm.querySelector('button').disabled = true;
-        this.showStatus('Authentifizierung läuft...', 'info');
-
-        // Sende Authentifizierung zur Firewall
-        const result = await firewall.authenticate(code);
-
-        if (result.success) {
-            this.showStatus('✓ Authentifizierung erfolgreich!', 'success');
-            
-            // Zeige Timer-Anwendung nach kurzer Verzögerung
-            setTimeout(() => {
-                this.showTimerApplication();
-            }, 500);
-        } else {
-            this.showStatus(result.message, 'error');
-            authCodeInput.value = '';
-            this.authForm.querySelector('button').disabled = false;
-        }
-    }
-
-    /**
-     * Zeigt die Timer-Anwendung an
-     */
-    showTimerApplication() {
-        this.authForm.parentElement.style.display = 'none';
-        this.timerApp.classList.remove('hidden');
+        // Telegram Button
+        this.copyTelegramBtn.addEventListener('click', () => this.handleTelegramExtension());
         
-        // Zeige anonymisierte Benutzerinformation
-        if (firewall.userEmail) {
-            this.userIdentity.textContent = firewall.userEmail;
-        } else {
-            this.userIdentity.textContent = 'Authentifizierter Benutzer';
-        }
+        // Update Session-Zeit alle 1 Sekunde
+        setInterval(() => this.updateSessionTime(), 1000);
     }
 
     /**
@@ -97,6 +58,8 @@ class TimerApplication {
             this.elapsedSeconds++;
             this.updateDisplay();
         }, 1000);
+        
+        console.log('▶️ Timer started');
     }
 
     /**
@@ -109,6 +72,7 @@ class TimerApplication {
         this.resetBtn.disabled = false;
 
         clearInterval(this.intervalId);
+        console.log('⏸️ Timer paused');
     }
 
     /**
@@ -123,6 +87,7 @@ class TimerApplication {
 
         clearInterval(this.intervalId);
         this.updateDisplay();
+        console.log('🔄 Timer reset');
     }
 
     /**
@@ -140,38 +105,107 @@ class TimerApplication {
     }
 
     /**
-     * Meldet den Benutzer ab
+     * Update Session-Zeit
+     */
+    updateSessionTime() {
+        const elapsed = Math.round((Date.now() - this.sessionStartTime) / 1000);
+        const minutes = Math.floor(elapsed / 60);
+        const seconds = elapsed % 60;
+        this.sessionTime.textContent = `Verbunden seit ${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+
+    /**
+     * Handle Telegram Extension Button Click
+     * TODO: Würde einen echten Telegram Bot API-Call machen
+     */
+    async handleTelegramExtension() {
+        const telegramHandle = '@TimerExtensionBot';
+        
+        // Kopiere Bot-Handle in Zwischenablage
+        navigator.clipboard.writeText(telegramHandle).then(() => {
+            this.showNotification(`📋 Bot-Handle "${telegramHandle}" kopiert!`, 'success');
+        }).catch(err => {
+            this.showNotification('❌ Fehler beim Kopieren', 'error');
+        });
+        
+        // Zeige Request-Status
+        this.requestStatus.classList.remove('hidden');
+        
+        // Simuliere Verarbeitung (300ms + 2.7s = ~3 Sekunden)
+        const delay = new Promise(resolve => setTimeout(resolve, 3000));
+        
+        try {
+            await delay;
+            
+            this.timerExtensions++;
+            this.requestStatus.classList.add('hidden');
+            
+            this.showNotification(
+                `✓ Verlängerung verarbeitet (#${this.timerExtensions})`,
+                'success'
+            );
+            
+            // Log zur Konsole
+            console.log(`⏱️ Timer extension #${this.timerExtensions} processed`);
+            console.log('Note: Dies ist eine CLIENT-SEITIGE Simulation. Ein echter Bot würde vom Server aufgerufen.');
+            
+        } catch (error) {
+            this.requestStatus.classList.add('hidden');
+            this.showNotification('❌ Verlängerung fehlgeschlagen', 'error');
+        }
+    }
+
+    /**
+     * Zeige Benachrichtigung
+     */
+    showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `notification notification-${type}`;
+        notification.textContent = message;
+        
+        this.notificationArea.appendChild(notification);
+        
+        // Auto-remove nach 4 Sekunden
+        setTimeout(() => {
+            notification.remove();
+        }, 4000);
+    }
+
+    /**
+     * Logout
      */
     logout() {
         if (confirm('Möchten Sie sich wirklich abmelden?')) {
             // Stoppe Timer
             this.reset();
             
-            // Beende Firewall-Sitzung
-            firewall.logout();
-
-            // Zeige Authentifizierungsformular wieder an
-            this.timerApp.classList.add('hidden');
-            this.authForm.parentElement.style.display = 'block';
+            // Log Session Info
+            const sessionDuration = Math.round((Date.now() - this.sessionStartTime) / 1000);
+            console.log('🔓 Session ended');
+            console.log(`Duration: ${sessionDuration} seconds`);
+            console.log(`Total extensions: ${this.timerExtensions}`);
             
-            // Lösche die Eingabe
-            document.getElementById('authCode').value = '';
-            this.authForm.querySelector('button').disabled = false;
-
-            this.showStatus('Sie haben sich abgemeldet', 'info');
+            // Zeige Info
+            this.showNotification('Sie haben sich abgemeldet', 'info');
+            
+            // Optional: Seite neu laden
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
         }
-    }
-
-    /**
-     * Zeigt eine Statusmeldung an
-     */
-    showStatus(message, type) {
-        this.statusMessage.textContent = message;
-        this.statusMessage.className = 'status-message ' + type;
     }
 }
 
 // Initialisiere die Timer-Anwendung, wenn die Seite geladen ist
 document.addEventListener('DOMContentLoaded', () => {
     new TimerApplication();
+    
+    // Zeige Warnung in Konsole
+    console.log('%c⚠️ WICHTIG', 'color: orange; font-size: 16px; font-weight: bold;');
+    console.log('%cDies ist eine CLIENT-SEITIGE Timer-Anwendung.', 'color: orange;');
+    console.log('%cFür produktiven Einsatz wird ein echtes Backend benötigt:', 'color: orange;');
+    console.log('%c  - Authentifizierung auf dem Server', 'color: gray;');
+    console.log('%c  - Echte Telegram Bot Integration', 'color: gray;');
+    console.log('%c  - E-Mail Versand vom Server', 'color: gray;');
+    console.log('%c  - Sichere Session-Verwaltung', 'color: gray;');
 });
