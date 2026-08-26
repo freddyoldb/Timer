@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timer - Sichere Authentifizierung</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="timer-interface">
+            <h1>Timer Interface</h1>
+            
+            <div class="auth-section">
+                <h2>Authentifizierung erforderlich</h2>
+                <p class="info-text">Bitte geben Sie Ihren Authentifizierungscode ein, um auf den Timer zuzugreifen.</p>
+                
+                <form id="authForm" class="auth-form">
+                    <div class="form-group">
+                        <label for="authCode">Authentifizierungscode:</label>
+                        <input 
+                            type="password" 
+                            id="authCode" 
+                            name="authCode" 
+                            placeholder="Code eingeben..." 
+                            required
+                            autocomplete="off"
+                        >
+                    </div>
+                    <button type="submit" class="btn-submit">Authentifizieren</button>
+                </form>
+
+                <div id="statusMessage" class="status-message"></div>
+            </div>
+
+            <div id="timerApp" class="timer-app hidden">
+                <div class="timer-display">
+                    <div id="timeDisplay" class="time-display">00:00:00</div>
+                </div>
+                
+                <div class="timer-controls">
+                    <button id="startBtn" class="btn-control">Start</button>
+                    <button id="pauseBtn" class="btn-control" disabled>Pause</button>
+                    <button id="resetBtn" class="btn-control">Reset</button>
+                </div>
+
+                <div class="user-info">
+                    <p>Authentifiziert als: <span id="userIdentity">Benutzer</span></p>
+                    <button id="logoutBtn" class="btn-logout">Abmelden</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="firewall.js"></script>
+    <script src="timer.js"></script>
+</body>
+</html>
