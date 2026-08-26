@@ -9,46 +9,49 @@
 <body>
     <div class="container">
         <div class="timer-interface">
-            <h1>Timer Interface</h1>
+            <h1>⏱️ Timer</h1>
             
-            <div class="auth-section">
-                <h2>Authentifizierung erforderlich</h2>
-                <p class="info-text">Bitte geben Sie Ihren Authentifizierungscode ein, um auf den Timer zuzugreifen.</p>
-                
-                <form id="authForm" class="auth-form">
-                    <div class="form-group">
-                        <label for="authCode">Authentifizierungscode:</label>
-                        <input 
-                            type="password" 
-                            id="authCode" 
-                            name="authCode" 
-                            placeholder="Code eingeben..." 
-                            required
-                            autocomplete="off"
-                        >
+            <div class="timer-display">
+                <div id="timeDisplay" class="time-display">00:00:00</div>
+            </div>
+            
+            <div class="timer-controls">
+                <button id="startBtn" class="btn-control">Start</button>
+                <button id="pauseBtn" class="btn-control" disabled>Pause</button>
+                <button id="resetBtn" class="btn-control">Reset</button>
+            </div>
+
+            <div class="telegram-section">
+                <div class="info-box">
+                    <h2>⚡ Timer verlängern</h2>
+                    <p class="info-text">Um den Timer zu verlängern, sende eine Nachricht an den Telegrambot:</p>
+                    
+                    <div class="telegram-info">
+                        <code class="telegram-handle">@TimerExtensionBot</code>
+                        <button id="copyTelegramBtn" class="btn-copy">📋 Kopieren</button>
                     </div>
-                    <button type="submit" class="btn-submit">Authentifizieren</button>
-                </form>
 
-                <div id="statusMessage" class="status-message"></div>
-            </div>
-
-            <div id="timerApp" class="timer-app hidden">
-                <div class="timer-display">
-                    <div id="timeDisplay" class="time-display">00:00:00</div>
-                </div>
-                
-                <div class="timer-controls">
-                    <button id="startBtn" class="btn-control">Start</button>
-                    <button id="pauseBtn" class="btn-control" disabled>Pause</button>
-                    <button id="resetBtn" class="btn-control">Reset</button>
+                    <p class="info-subtext">Nachdem du die Nachricht gesendet hast, wird der Timer hinter der Firewall verlängert.</p>
                 </div>
 
-                <div class="user-info">
-                    <p>Authentifiziert als: <span id="userIdentity">Benutzer</span></p>
-                    <button id="logoutBtn" class="btn-logout">Abmelden</button>
+                <div id="requestStatus" class="request-status hidden">
+                    <div class="status-content">
+                        <p>📨 Verlängerungsanfrage wurde versendet</p>
+                        <p class="status-subtitle">Warte auf Bestätigung vom Telegrambot...</p>
+                        <div class="spinner"></div>
+                    </div>
                 </div>
             </div>
+
+            <div class="user-session">
+                <div class="session-info">
+                    <p>🔒 Sitzung aktiv</p>
+                    <p class="session-time" id="sessionTime">Verbunden...</p>
+                </div>
+                <button id="logoutBtn" class="btn-logout">Abmelden</button>
+            </div>
+
+            <div id="notificationArea" class="notification-area"></div>
         </div>
     </div>
 
