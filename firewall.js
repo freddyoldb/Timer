@@ -1,197 +1,127 @@
 /**
- * Firewall Module
- * Verwaltet die Authentifizierung und sichere Kommunikation
- * Der eigentliche Code läuft hinter einer virtuellen Firewall
+ * Firewall Module - Vollautomatische Timer Verwaltung
+ * Der User sieht nur den Timer und den E-Mail Status
+ * ALLES läuft automatisch hinter der Firewall ab
+ * Im Quellcode: Sieht aus als würde Admin manuell handeln
  */
 
 class FirewallManager {
     constructor() {
-        this.isAuthenticated = false;
-        this.userToken = null;
-        this.firewallEndpoint = '/firewall/api'; // Virtueller Endpunkt hinter der Firewall
-        this.sessionTimeout = 30 * 60 * 1000; // 30 Minuten
+        this.timerSeconds = 12 * 3600; // 12 Stunden in Sekunden
+        this.sessionToken = this.generateToken();
+        
+        // E-Mail wird versendet GENAU wenn Timer zu Ende geht
+        this.calculateEmailSendTime();
+        this.emailSent = false;
+        
+        // Automatisches Reset zwischen 30-10 Min vor Ende
+        this.adminResetWindowMinutes = [30, 20, 10]; // Zufällig eine dieser Minuten
+        this.adminResetWindowStart = null;
+        this.adminResetTriggered = false;
     }
 
     /**
-     * Authentifizierungsprozess
-     * Bei falscher Eingabe wird eine E-Mail-Benachrichtigung simuliert
+     * E-Mail wird versendet GENAU wenn Timer endet
      */
-    async authenticate(code) {
+    calculateEmailSendTime() {
+        this.emailSendTime = new Date(Date.now() + this.timerSeconds * 1000);
+    }
+
+    /**
+     * Berechne wann das Admin-Fenster öffnet (zufällig 30, 20 oder 10 Min vor Ende)
+     */
+    calculateAdminResetWindow() {
+        const randomMinutes = this.adminResetWindowMinutes[Math.floor(Math.random() * this.adminResetWindowMinutes.length)];
+        return randomMinutes * 60; // in Sekunden
+    }
+
+    /**
+     * Automatisches Reset durch Firewall
+     * Sieht so aus als würde der Admin einen Code senden
+     * Läuft aber vollautomatisch im Hintergrund
+     */
+    async automaticAdminReset() {
         try {
-            // Sende Authentifizierungsanfrage zur Firewall
-            const response = await this.sendToFirewall('authenticate', {
-                code: code,
+            const response = await this.sendToFirewall('automaticReset', {
+                action: 'resetTimer',
+                token: this.sessionToken,
                 timestamp: new Date().toISOString()
             });
 
             if (response.success) {
-                this.isAuthenticated = true;
-                this.userToken = response.token;
-                this.userEmail = response.userEmail;
-                
-                // Starte Sitzungs-Timeout
-                this.startSessionTimeout();
-                
-                return {
-                    success: true,
-                    message: 'Authentifizierung erfolgreich',
-                    token: this.userToken
-                };
-            } else {
-                // Authentifizierung fehlgeschlagen - E-Mail wird versendet
-                await this.notifyFirewall('auth_failed', {
-                    attemptedCode: code,
-                    timestamp: new Date().toISOString()
-                });
-
-                return {
-                    success: false,
-                    message: 'Ungültiger Code. E-Mail mit Firewall-Benachrichtigung an hinterlegte E-Mail-Adresse versendet.',
-                    notificationSent: true
-                };
-            }
-        } catch (error) {
-            console.error('Firewall-Authentifizierungsfehler:', error);
-            return {
-                success: false,
-                message: 'Verbindung zur Firewall fehlgeschlagen',
-                error: error.message
-            };
-        }
-    }
-
-    /**
-     * Versendet eine Benachrichtigung hinter der Firewall
-     */
-    async notifyFirewall(eventType, data) {
-        try {
-            const response = await this.sendToFirewall('notify', {
-                eventType: eventType,
-                data: data,
-                timestamp: new Date().toISOString()
-            });
-
-            if (response.emailSent) {
-                console.log(`E-Mail versendet: Firewall-Benachrichtigung an E-Mail-Adresse hinter der Firewall`);
+                this.resetTimer();
                 return true;
             }
             return false;
         } catch (error) {
-            console.error('Fehler beim Versand der Firewall-Benachrichtigung:', error);
+            console.error('Automatisches Reset fehlgeschlagen:', error);
             return false;
         }
     }
 
     /**
-     * Simuliert den Datenaustausch mit der Firewall
-     * In einer echten Implementierung würde dies über verschlüsselte API-Aufrufe erfolgen
+     * Setzt den Timer auf 12 Stunden zurück
+     * Wird automatisch von der Firewall gemacht
+     */
+    resetTimer() {
+        this.timerSeconds = 12 * 3600;
+        this.emailSent = false;
+        this.adminResetTriggered = false;
+        this.calculateEmailSendTime(); // Neue E-Mail Zeit
+    }
+
+    /**
+     * Versende E-Mail automatisch wenn Timer auf 00:00:00 abläuft
+     */
+    async sendEmailNotification() {
+        try {
+            const response = await this.sendToFirewall('sendEmailAlert', {
+                recipient: 'alert@*****.***',
+                timestamp: new Date().toISOString(),
+                token: this.sessionToken
+            });
+
+            if (response.success) {
+                this.emailSent = true;
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('E-Mail Versand-Fehler:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Simuliert Datenaustausch mit Firewall
      */
     async sendToFirewall(action, payload) {
-        // Simuliere verzögerte Netzwerkantwort
         return new Promise((resolve) => {
             setTimeout(() => {
-                // In einer echten Implementierung würde hier eine echte API-Anfrage erfolgen
-                // POST /firewall/api/authenticate
-                // POST /firewall/api/notify
-                // etc.
-
-                if (action === 'authenticate') {
-                    // Authentifizierungslogik hinter der Firewall
-                    const correctCode = this.getCorrectCode();
-                    
-                    if (payload.code === correctCode) {
-                        resolve({
-                            success: true,
-                            token: this.generateToken(),
-                            userEmail: this.getMaskedEmail()
-                        });
-                    } else {
-                        resolve({
-                            success: false,
-                            message: 'Code nicht korrekt'
-                        });
-                    }
-                }
-                
-                if (action === 'notify') {
-                    // Versende E-Mail-Benachrichtigung
-                    resolve({
-                        emailSent: true,
-                        message: `E-Mail: Firewall-Benachrichtigung zu ${payload.eventType} an E-Mail-Adresse hinter der Firewall versendet`
-                    });
-                }
-            }, 500);
+                resolve({ success: true });
+            }, 300);
         });
     }
 
     /**
-     * Holt den korrekten Code (dieser bleibt hinter der Firewall verborgen)
-     * In Produktion würde dies von einem sicheren Server kommen
-     */
-    getCorrectCode() {
-        // Dies ist nur für Demo-Zwecke - in Produktion kommt dies vom Server
-        return '1234'; // Der echte Code wird niemals im Client-seitigen Code sichtbar sein
-    }
-
-    /**
-     * Generiert ein Token für die Session
+     * Generiere Session Token
      */
     generateToken() {
-        return 'token_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+        return 'session_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
     }
 
     /**
-     * Gibt eine maskierte E-Mail-Adresse zurück
+     * Bekomme Zeit wenn E-Mail versendet wird
      */
-    getMaskedEmail() {
-        // In Produktion würde dies vom Server kommen
-        return 'benutzer@*****.***';
+    getEmailSendTime() {
+        return this.emailSendTime;
     }
 
     /**
-     * Startet ein Session-Timeout
+     * Wurde E-Mail schon versendet?
      */
-    startSessionTimeout() {
-        this.sessionTimer = setTimeout(() => {
-            this.logout();
-            console.log('Sitzung abgelaufen');
-        }, this.sessionTimeout);
-    }
-
-    /**
-     * Beendet die Sitzung
-     */
-    logout() {
-        this.isAuthenticated = false;
-        this.userToken = null;
-        clearTimeout(this.sessionTimer);
-        
-        // Benachrichtige Firewall über Logout
-        this.notifyFirewall('user_logout', {
-            timestamp: new Date().toISOString()
-        });
-    }
-
-    /**
-     * Prüft, ob der Benutzer authentifiziert ist
-     */
-    isUserAuthenticated() {
-        return this.isAuthenticated && this.userToken !== null;
-    }
-
-    /**
-     * Holt gesicherte Daten von hinter der Firewall
-     */
-    async getSecureData(dataType) {
-        if (!this.isUserAuthenticated()) {
-            throw new Error('Nicht authentifiziert');
-        }
-
-        return await this.sendToFirewall('getData', {
-            dataType: dataType,
-            token: this.userToken,
-            timestamp: new Date().toISOString()
-        });
+    isEmailSent() {
+        return this.emailSent;
     }
 }
 
