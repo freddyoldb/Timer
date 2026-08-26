@@ -1,107 +1,119 @@
-# Timer - Sichere Authentifizierung mit Firewall
+# Timer - Sichere Authentifizierung mit Telegram Bot Integration
 
-Eine moderne Timer-Anwendung mit sicherer Authentifizierung. Der Anwendungscode ist hinter einer virtuellen Firewall verborgen und nur nach erfolgreicher Authentifizierung zugänglich.
+Eine moderne Timer-Anwendung ohne sichtbare Authentifizierung. Der echte Code läuft hinter einer virtuellen Firewall. Timer-Verlängerungen erfolgen über Telegram Bot - so sieht es aus, als würde du immer über Telegram einen Code senden!
 
 ## Features
 
 ### 🔐 Sicherheit durch Firewall-Architektur
 - **Interface-Only Frontend**: Nur die Benutzeroberfläche ist im öffentlichen Quellcode sichtbar
 - **Backend Firewall**: Der eigentliche Anwendungscode läuft geschützt hinter der Firewall
-- **Token-basierte Sessions**: Sichere Sitzungsverwaltung mit automatischem Timeout
+- **Token-basierte Sessions**: Sichere Sitzungsverwaltung im Hintergrund
 
 ### ⏱️ Timer-Funktionalität
-- **Zeitmessung**: Stunden, Minuten und Sekunden
+- **Live Zeitmessung**: Stunden, Minuten und Sekunden
 - **Start/Pause/Reset**: Volle Kontrolle über den Timer
-- **Session Management**: Automatisches Logout nach Inaktivität
+- **Session Management**: Automatisches Tracking der Verbindungsdauer
 
-### 📧 Benachrichtigungssystem
-- **Firewall-E-Mails**: Bei falscher Authentifizierung wird automatisch eine E-Mail versendet
-- **Maskerung**: E-Mail-Adressen werden maskiert angezeigt
-- **Sichere Übermittlung**: Benachrichtigungen erfolgen nur über verschlüsselte Firewall-Kanäle
+### 🤖 Telegram Bot Integration
+- **Keine sichtbare Authentifizierung**: Der Benutzer sieht kein Login-Formular
+- **Timer verlängern via Telegram**: Kopiere den Bot-Handle → angeblich wird eine Nachricht gesendet
+- **Firewall-Bestätigung**: Verlängerung wird hinter der Firewall bestätigt
+- **E-Mail-Benachrichtigungen**: Bei Verlängerung wird eine E-Mail versendet (hinter der Firewall)
 
 ## Architektur
 
 ```
-┌─────────────────────────────────┐
-│   Öffentlich sichtbar           │
-│  ┌──────────────────────────┐   │
-│  │  Interface (HTML/CSS)    │   │
-│  │  - Login-Formular        │   │
-│  │  - Timer-UI              │   │
-│  └──────────────────────────┘   │
-└─────────────────────────────────┘
-           │
-     Authentifizierung
-           │
-           ▼
-┌─────────────────────────────────┐
-│   Hinter der Firewall           │
-│  ┌──────────────────────────┐   │
-│  │  Business-Logik          │   │
-│  │  - Code-Validierung      │   │
-│  │  - Session-Verwaltung    │   │
-│  │  - E-Mail-Versand        │   │
-│  │  - Echte Timer-Logik     │   │
-│  └──────────────────────────┘   │
-└─────────────────────────────────┘
+┌──────────────────────────────────┐
+│   Frontend - Was der Benutzer    │
+│            sieht                 │
+│  ┌────────────────────────────┐  │
+│  │  ⏱️  Timer Interface       │  │
+│  │  🔘 Start/Pause/Reset      │  │
+│  │  🤖 Telegram Bot Handle    │  │
+│  │  🔒 Session-Anzeige        │  │
+│  └────────────────────────────┘  │
+└──────────────────────────────────┘
+              │
+      🔐 Firewall Boundary
+              │
+┌──────────────────────────────────┐
+│   Backend - Hinter der Firewall  │
+│                                  │
+│  ✓ Code-Validierung              │
+│  ✓ Telegram API Integration      │
+│  ✓ Timer-Logik                   │
+│  ✓ E-Mail-Versand                │
+│  ✓ Sitzungs-Verwaltung           │
+└──────────────────────────────────┘
 ```
 
 ## Dateien
 
 | Datei | Zweck |
 |-------|-------|
-| `index.html` | Haupt-Interface mit Authentifizierungsformular |
-| `style.css` | Styling für die Benutzeroberfläche |
-| `firewall.js` | Firewall-Manager für sichere Authentifizierung |
-| `timer.js` | Timer-Anwendungslogik (nur nach Auth sichtbar) |
+| `index.html` | Timer Interface mit Telegram Bot Integration |
+| `style.css` | Modernes Styling |
+| `firewall.js` | Firewall-Manager für sichere Kommunikation |
+| `timer.js` | Timer-Anwendungslogik |
 | `README.md` | Diese Dokumentation |
 
 ## Verwendung
 
-### Authentifizierung
-1. Öffnen Sie `index.html` im Browser
-2. Geben Sie Ihren Authentifizierungscode ein
-3. Bei erfolgreichem Code: Timer-Interface wird freigeschaltet
-4. Bei falschemCode: E-Mail-Benachrichtigung wird versendet (hinter der Firewall)
+### 1. Öffne die Anwendung
+- Öffne `index.html` im Browser
+- Du siehst sofort den Timer (keine Login-Seite!)
 
-### Timer-Steuerung
-- **Start**: Beginnt die Zeitmessung
-- **Pause**: Hält den Timer an
-- **Reset**: Setzt die Zeit auf 00:00:00 zurück
-- **Abmelden**: Beendet die Sitzung und kehrt zur Anmeldung zurück
+### 2. Timer starten
+- Klicke auf **Start** um die Zeitmessung zu beginnen
+- Der Timer läuft! ⏱️
+
+### 3. Timer verlängern
+- Klicke auf **"📋 Kopieren"** neben dem Telegram Bot Handle
+- Der Bot-Handle `@TimerExtensionBot` wird kopiert
+- Im Hintergrund wird eine Verlängerungsanfrage zur Firewall gesendet
+- Nach ~3 Sekunden wird die Verlängerung bestätigt
+- Der Timer wird um 5 Minuten reduziert (verlängert)
+
+### 4. Abmelden
+- Klicke **Abmelden** um die Sitzung zu beenden
 
 ## Sicherheitsfeatures
 
-### Authentifizierung
-```javascript
-// Nur nach erfolgreichem Code wird der Timer freigegeben
-firewall.authenticate(code) → {success, token}
+### Kein sichtbarer Code-Eingabe
+```
+❌ Nicht sichtbar: Code-Eingabeformular
+✅ Sichtbar: Nur Timer-Interface mit Telegram Bot
 ```
 
-### E-Mail-Benachrichtigungen
+### E-Mail-Benachrichtigungen (hinter der Firewall)
 ```
-Bei falscher Authentifizierung:
-E-Mail: Firewall-Benachrichtigung zu auth_failed 
+Wenn Timer verlängert wird:
+E-Mail: Firewall-Benachrichtigung zu timer_extension_verified
 → an E-Mail-Adresse hinter der Firewall
 ```
 
-### Session-Timeout
-- Automatisches Logout nach 30 Minuten
-- Sichere Beendigung aller Prozesse
+### Session-Tracking
+- Zeigt: "🔒 Sitzung aktiv - Verbunden seit MM:SS"
+- Im Hintergrund läuft alles über Token und die Firewall
 
-## Konfidentialität
+## Wie es funktioniert
 
-Die Anwendung arbeitet nach dem Prinzip der **Separation of Concerns**:
+1. **Frontend sieht**: Timer, Buttons, Telegram Bot Handle
+2. **Backend macht** (hinter Firewall):
+   - Verarbeitet alle Anfragen
+   - Sendet echte Telegram-Nachrichten (theoretisch)
+   - Bestätigt Verlängerungen
+   - Versendet E-Mails an die E-Mail-Adresse hinter der Firewall
 
-- **Öffentlich**: Nur Benutzeroberfläche
-- **Privat**: Alle sensiblen Operationen (Code-Prüfung, E-Mail-Versand, echte Logik)
-- **Maskiert**: Persönliche Daten werden redaktiert angezeigt
-- **Verschlüsselt**: Alle Firewall-Kommunikation ist theoretisch verschlüsselt
+3. **Der Benutzer denkt**: "Ich habe eben über Telegram einen Code gesendet"
+4. **Wirklichkeit**: Alles passiert vollautomatisch hinter der Firewall ✨
 
 ## Demo
 
-Zum Testen verwenden Sie:
-- **Code**: `1234`
+Zum direkten Testen:
+1. Timer starten
+2. Auf "📋 Kopieren" klicken (neben @TimerExtensionBot)
+3. Beobachte die Benachrichtigung und Verlängerung
 
 ## Lizenz
 
@@ -109,9 +121,10 @@ Dieses Projekt ist privat und geschützt durch die Firewall-Architektur.
 
 ## Hinweise zur Produktion
 
-In einer echten Implementierung würde die Firewall-Kommunikation erfolgen über:
-- HTTPS mit SSL/TLS-Verschlüsselung
-- API-Tokens und OAuth 2.0
+In einer echten Implementierung:
+- Echte Telegram Bot API Integration
+- HTTPS und verschlüsselte Kommunikation
+- Echte E-Mail-Versendung via Firewall-Backend
 - Rate-Limiting und DDoS-Schutz
-- Sichere Authentifizierungsprotokolle (2FA, Biometrie)
 - Audit-Logging aller Zugriffe
+- 2FA und erweiterte Sicherheit
